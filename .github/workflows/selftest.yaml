@@ -1,17 +1,32 @@
 name: Self-test
 
 on:
-  workflow_dispatch:
-    inputs:
-      test:
-        type: boolean
-        default: false
-        description: A pointless checkbox.
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
-  wait:
-    name: Wait
+  run_e2e:
+    name: run_e2e
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [test01, test02, test03, test04]
     steps:
-    - name: Do nothing
-      run: sleep 30
+      - uses: convictional/trigger-workflow-and-wait@v1.6.3
+        name: trigger ${{ matrix.target }} and wait for it
+        with:
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          github_token: ${{ secrets.GH_DISPATCH_TOKEN }}
+          workflow_file_name: dispatch_ci.yml
+          ref: ${{ github.ref_name }}
+          wait_interval: 3
+          client_payload: '{"testsuite":"${{ matrix.target }}"}'
+          propagate_failure: true # Fail current job if downstream job fails.
+          trigger_workflow: true
+          wait_workflow: true

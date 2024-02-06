@@ -1,0 +1,28 @@
+name: Dispatch CI
+on:
+  workflow_dispatch:
+    inputs:
+      testsuite:
+        description: 'a Set of test cases'
+        required: true
+        default: 'test01'
+        type: choice
+        options:
+        - test01
+        - test02
+        - test03
+        - test04
+
+jobs:
+  dispatch-ci:
+    name: run ${{ inputs.testsuite }} test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: return random for testing purpose
+        run: |
+          sleep 5
+
+          if [ "${{inputs.testsuite}}" == "test02" ]; then
+            exit 1
+          fi
