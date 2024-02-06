@@ -17,14 +17,15 @@ jobs:
       matrix:
         target: [test01, test02, test03, test04]
     steps:
-      - uses: convictional/trigger-workflow-and-wait@v1.6.3
+      - uses: actions/checkout@v3
+      - uses: ./
         name: trigger ${{ matrix.target }} and wait for it
         with:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           github_token: ${{ secrets.GH_DISPATCH_TOKEN }}
           workflow_file_name: dispatch_workflow.yaml
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.base_ref }}
           wait_interval: 3
           client_payload: '{"testsuite":"${{ matrix.target }}"}'
           propagate_failure: true # Fail current job if downstream job fails.
