@@ -24,7 +24,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           github_token: ${{ secrets.GH_DISPATCH_TOKEN }}
-          workflow_file_name: dispatch_workflow.yaml
+          workflow_file_name: dispatch_workflow.yml
           ref: ${{ github.base_ref }}
           wait_interval: 3
           client_payload: '{"testsuite":"${{ matrix.target }}"}'
