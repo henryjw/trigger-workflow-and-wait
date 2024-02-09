@@ -1,0 +1,39 @@
+name: Self-test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  run_e2e:
+    name: run_e2e
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [test01, test02, test03, test04]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./
+        name: trigger ${{ matrix.target }} and wait for it
+        with:
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          github_token: ${{ secrets.GH_DISPATCH_TOKEN }}
+          workflow_file_name: dispatch_workflow.yml
+          ref: ${{ github.ref_name }}
+          wait_interval: 3
+          run_name: "Dispatch ${{ matrix.target }}"
+          client_payload: |
+            {
+              "testsuite": "${{ matrix.target }}",
+              "run-name": "Dispatch ${{ matrix.target }}",
+              "fail_case": "test02"
+            }
+          propagate_failure: ${{ matrix.target != 'test02' }}  # The `fail_case` test is expected failure, so we don't want to propagate the failure in this case
+          trigger_workflow: true
+          wait_workflow: true

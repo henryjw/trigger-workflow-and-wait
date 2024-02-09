@@ -20,6 +20,10 @@ inputs:
   ref:
     description: 'The reference of the workflow run. The reference can be a branch, tag, or a commit SHA. Default: main'
     required: false
+  run_name:
+    # TODO: add better description
+    description: "The name of the run to filter by when checking for workflows. This is helpful when dispatching workflows from matrix calls"
+    required: false
   wait_interval:
     description: "The number of seconds delay between checking for result of run."
     required: false

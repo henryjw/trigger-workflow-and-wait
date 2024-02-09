@@ -113,6 +113,13 @@ You can see the example [here](https://github.com/keithconvictional/trigger-work
     exit 1
 ```
 
+## Known issues
+When triggering many workflows at the same time (e.g., via `matrix`), the logic for selecting the workflow ID associated with the parent job will get confused. This leads to the incorrect status often being propagated to the parent job.
+As a workaround, you can use unique names for the workflows and then set the `run-name` property.
+
+
+See the [example workflow](./.github/workflows/selftest.yml) for an example of how to do this.
+
 ## Potential Issues
 
 ### Changes

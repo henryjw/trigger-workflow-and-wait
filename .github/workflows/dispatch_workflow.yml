@@ -1,0 +1,37 @@
+run-name: ${{ inputs.run-name }}
+on:
+  workflow_dispatch:
+    inputs:
+      fail_case:
+        description: 'Test for which there is an expected failure'
+        required: false
+        default: 'test02'
+        type: string
+      testsuite:
+        description: 'a Set of test cases'
+        required: true
+        default: 'test01'
+        type: choice
+        options:
+        - test01
+        - test02
+        - test03
+        - test04
+      run-name:
+        description: 'The name of this workflow run'
+        required: true
+        type: string
+
+jobs:
+  dispatch-ci:
+    name: run ${{ inputs.testsuite }} test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Return failure for ${{ inputs.fail_case }}
+        run: |
+          sleep 5
+
+          if [ "${{inputs.testsuite}}" == "${{inputs.fail_case}}" ]; then
+            exit 1
+          fi

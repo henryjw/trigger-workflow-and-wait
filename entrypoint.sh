@@ -39,6 +39,12 @@ validate_args() {
     wait_workflow=${INPUT_WAIT_WORKFLOW}
   fi
 
+  run_name=""
+  if [ -n "${INPUT_RUN_NAME}" ]
+  then
+    run_name=${INPUT_RUN_NAME}
+  fi
+
   if [ -z "${INPUT_OWNER}" ]
   then
     echo "Error: Owner is a required argument."
@@ -118,16 +124,24 @@ lets_wait() {
 # Return the ids of the most recent workflow runs, optionally filtered by user
 get_workflow_runs() {
   since=${1:?}
-
   query="event=workflow_dispatch&created=>=$since${INPUT_GITHUB_USER+&actor=}${INPUT_GITHUB_USER}&per_page=100"
 
   echo "Getting workflow runs using query: ${query}" >&2
 
-  api "workflows/${INPUT_WORKFLOW_FILE_NAME}/runs?${query}" |
-  jq -r '.workflow_runs[].id' |
-  sort # Sort to ensure repeatable order, and lexicographically for compatibility with join
-}
+  workflow_runs=$(api "workflows/${INPUT_WORKFLOW_FILE_NAME}/runs?${query}" | jq -r '.workflow_runs[]')
 
+  if [ -z "$INPUT_RUN_NAME" ]
+  then
+    echo $workflow_runs |
+      jq -r '.id' |
+      sort # Sort to ensure repeatable order, and lexicographically for compatibility with join
+  else
+    echo "Filtering workflow runs using run_name: ${INPUT_RUN_NAME}" >&2
+    echo $workflow_runs |
+      jq -r --arg rn "$INPUT_RUN_NAME" 'select(.name == $rn) | .id' |
+      sort # Sort to ensure repeatable order, and lexicographically for compatibility with join
+  fi
+}
 trigger_workflow() {
   START_TIME=$(date +%s)
   SINCE=$(date -u -Iseconds -d "@$((START_TIME - 120))") # Two minutes ago, to overcome clock skew
@@ -214,6 +228,8 @@ wait_for_workflow_to_finish() {
 main() {
   validate_args
 
+  echo "DEBUG: Run-name: ${run_name}"
+
   if [ "${trigger_workflow}" = true ]
   then
     run_ids=$(trigger_workflow)
@@ -223,6 +239,7 @@ main() {
 
   if [ "${wait_workflow}" = true ]
   then
+    echo "DEBUG: Waiting for workflow to finish with run_ids: ${run_ids}"
     for run_id in $run_ids
     do
       wait_for_workflow_to_finish "$run_id"
